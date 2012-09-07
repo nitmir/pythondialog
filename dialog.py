@@ -216,6 +216,8 @@ _common_args_syntax = {
     "create_rc": lambda file: ("--create-rc", file),
     "defaultno": lambda enable: _simple_option("--defaultno", enable),
     "default_item": lambda string: ("--default-item", string),
+    "extra_button": lambda enable: __simple_option("--extra-button", enable),
+    "extra_label": lambda string: ("--extra-label", string),
     "help": lambda enable: _simple_option("--help", enable),
     "help_button": lambda enable: _simple_option("--help-button", enable),
     "help_label": lambda string: ("--help-label", string),

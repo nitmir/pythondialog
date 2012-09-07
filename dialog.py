@@ -64,7 +64,7 @@ program) and you should be safe.
 """
 
 from __future__ import nested_scopes
-import sys, os, tempfile, random, string, re, types
+import sys, os, tempfile, random, string, re, types, fcntl
 
 
 # Python < 2.3 compatibility
@@ -719,6 +719,22 @@ class Dialog:
             os.close(child_wfd)
             if redirect_child_stdin:
                 os.close(child_stdin_rfd)
+
+                # Make sure that if the father does a fork/exec, the
+                # child_stdin_wfd file descriptor automatically closes for the
+                # newly created child. This is needed, because otherwise we may
+                # run into a deadlock, where the father closes child_stdin_wfd
+                # and then waits to collect the dialog process, but the
+                # dialog process does not receive a EOF and does not terminate
+                # because the one side of the pipe is still open (by the newly
+                # created child process).
+                try:
+                    flags = fcntl.fcntl(child_stdin_wfd, fcntl.F_GETFL, 0)
+                    fcntl.fcntl(child_stdin_wfd, fcntl.F_SETFD,
+                                flags | fcntl.FD_CLOEXEC)
+                except IOError, e:
+                    raise PythonDialogIOError(e.strerror)
+
                 return (child_pid, child_rfd, child_stdin_wfd)
             else:
                 return (child_pid, child_rfd)

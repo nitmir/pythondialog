@@ -248,7 +248,9 @@ _common_args_syntax = {
     "title": lambda title: ("--title", title),
     "trim": lambda enable: _simple_option("--trim", enable),
     "version": lambda enable: _simple_option("--version", enable),
-    "yes_label": lambda string: ("--yes-label", string)}
+    "yes_label": lambda string: ("--yes-label", string),
+    "no_collapse": lambda enable: _simple_option("--no-collapse", enable),
+    "scrollbar": lambda enable: _simple_option("--scrollbar", enable)}
     
 
 def _simple_option(option, enable):

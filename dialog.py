@@ -1404,6 +1404,34 @@ class Dialog:
             *(["--msgbox", text, str(height), str(width)],),
             **kwargs)[0]
 
+    def pause(self, text, height=10, width=30, duration=10, **kwargs):
+        """Display a message dialog box.
+
+        text   -- text to display in the box
+        height -- height of the box
+        width  -- width of the box
+        duration -- time to pause
+
+        A pause box is very similar to a message box. The only
+        difference between a message box and a pause box is that a
+        pause box automaticaly return after duration seconds.
+        dialog box to display any message you like. After reading
+        the message, the user can press the ENTER key so that dialog
+        will exit and the calling program can continue its
+        operation.
+
+        Return the exit status (an integer) of the dialog-like
+        program.
+
+        Notable exceptions:
+
+            any exception raised by self._perform()
+
+	"""
+	return self._perform(
+            *(["--pause", text, str(height), str(width), str(duration)],),
+            **kwargs)[0]
+
     def passwordbox(self, text, height=10, width=60, init='', **kwargs):
         """Display an password input dialog box.
 

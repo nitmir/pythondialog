@@ -250,7 +250,11 @@ _common_args_syntax = {
     "version": lambda enable: _simple_option("--version", enable),
     "yes_label": lambda string: ("--yes-label", string),
     "no_collapse": lambda enable: _simple_option("--no-collapse", enable),
-    "scrollbar": lambda enable: _simple_option("--scrollbar", enable)}
+    "scrollbar": lambda enable: _simple_option("--scrollbar", enable),
+    "no_tags": lambda enable: _simple_option("--no-tags", enable),
+    "no_mouse": lambda enable: _simple_option("--no-mouse", enable),
+    "default_button": lambda string: ("--default-button", string),
+}
     
 
 def _simple_option(option, enable):
@@ -694,6 +698,7 @@ class Dialog:
                           self.dialog_persistent_arglist + \
                           _compute_common_args(kwargs) + \
                           cmdargs
+
                 # Insert here the contents of the DEBUGGING file if you want
                 # to obtain a handy string of the complete command line with
                 # arguments quoted for the shell and environment variables

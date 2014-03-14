@@ -1,0 +1,18 @@
+pythondialog (2.7-1turnkey+4avamagic2) precise; urgency=low
+
+  * Update Debian control
+  * Switch to dpkg-source 3.0 (quilt) format
+
+ -- Ron Huang <ronhuang@gmail.com>  Sat, 11 May 2013 18:41:40 +0800
+
+pythondialog (2.7-1turnkey+4) precise; urgency=low
+
+  * Add new widgets for Turnkey.
+
+ -- Alon Swartz <alon@sterilesecurity.com>  Sun, 17 Oct 2010 11:02:13 +0200
+
+pythondialog (2.7) precise; urgency=low
+
+  * Initial release (Closes: #402453).
+
+ -- Adam Cécile (Le_Vert) <gandalf@le-vert.net>  Sun, 10 Dec 2006 16:30:10 +0100

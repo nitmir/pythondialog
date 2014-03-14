@@ -64,7 +64,7 @@ program) and you should be safe.
 """
 
 from __future__ import nested_scopes
-import sys, os, tempfile, random, string, re, types
+import sys, os, tempfile, random, string, re, types, fcntl
 
 
 # Python < 2.3 compatibility
@@ -216,6 +216,8 @@ _common_args_syntax = {
     "create_rc": lambda file: ("--create-rc", file),
     "defaultno": lambda enable: _simple_option("--defaultno", enable),
     "default_item": lambda string: ("--default-item", string),
+    "extra_button": lambda enable: __simple_option("--extra-button", enable),
+    "extra_label": lambda string: ("--extra-label", string),
     "help": lambda enable: _simple_option("--help", enable),
     "help_button": lambda enable: _simple_option("--help-button", enable),
     "help_label": lambda string: ("--help-label", string),
@@ -724,6 +726,22 @@ class Dialog:
             os.close(child_wfd)
             if redirect_child_stdin:
                 os.close(child_stdin_rfd)
+
+                # Make sure that if the father does a fork/exec, the
+                # child_stdin_wfd file descriptor automatically closes for the
+                # newly created child. This is needed, because otherwise we may
+                # run into a deadlock, where the father closes child_stdin_wfd
+                # and then waits to collect the dialog process, but the
+                # dialog process does not receive a EOF and does not terminate
+                # because the one side of the pipe is still open (by the newly
+                # created child process).
+                try:
+                    flags = fcntl.fcntl(child_stdin_wfd, fcntl.F_GETFL, 0)
+                    fcntl.fcntl(child_stdin_wfd, fcntl.F_SETFD,
+                                flags | fcntl.FD_CLOEXEC)
+                except IOError, e:
+                    raise PythonDialogIOError(e.strerror)
+
                 return (child_pid, child_rfd, child_stdin_wfd)
             else:
                 return (child_pid, child_rfd)
@@ -1468,6 +1486,103 @@ class Dialog:
         password = self._strip_xdialog_newline(password)
 
         return (code, password)
+
+    def progressbox_start(self, height=10, width=30, **kwargs):
+	"""Display gauge box.
+
+        height  -- height of the box
+        width   -- width of the box
+
+        A progress box displays the piped output of a command
+
+        This function starts the dialog-like program telling it to
+        display an empty progress box.
+
+        Return value: undefined.
+
+
+        Progressbox typical usage
+        -------------------
+
+        Progressbox typical usage (assuming that `d' is an instance of the
+	Dialog class) looks like this:
+	    d.progressbox_start()
+	    # do something
+	    d.progressbox_display('Hello\n')       # It displays Hello
+	    # ...
+	    exit_code = d.progressbox_stop()           # cleanup actions
+
+
+        Notable exceptions:
+            - any exception raised by self._call_program()
+            - PythonDialogOSError
+
+	"""
+        (child_pid, child_rfd, child_stdin_wfd) = self._call_program(
+            True,
+            *(["--progressbox", str(height), str(width)],),
+            **kwargs)
+        try:
+            self._progressbox_process = {
+                "pid": child_pid,
+                "stdin": os.fdopen(child_stdin_wfd, "w", 0),
+                "child_rfd": child_rfd
+                }
+        except os.error, v:
+            raise PythonDialogOSError(v.strerror)
+
+    def progressbox_output(self, text):
+	"""Output text in a progressbox.
+	
+        text    -- new text to be appended to progressbox output
+
+        This function appends new text to a running progressc box running
+	(meaning `progressbox_start' must have been called previously).
+
+	See the `progressbox_start' function's documentation for
+	information about how to use a progressbox.
+
+        Return value: undefined.
+
+        Notable exception: PythonDialogIOError can be raised if there
+                           is an I/O error while writing to the pipe
+                           used to talk to the dialog-like program.
+
+	"""
+	try:
+            self._progressbox_process["stdin"].write(text)
+            self._progressbox_process["stdin"].flush()
+        except IOError, v:
+            raise PythonDialogIOError(v)
+
+    def progressbox_stop(self):
+	"""Terminate a running progresbox.
+
+        This function performs the appropriate cleanup actions to
+        terminate a running progressbox (started with `progressbox_start').
+	
+	See the `progressbox_start' function's documentation for information
+	about how to use a progressbox.
+
+        Return value: undefined.
+
+        Notable exceptions:
+            - any exception raised by
+              self._wait_for_program_termination()
+            - PythonDialogIOError can be raised if closing the pipe
+              used to talk to the dialog-like program fails.
+
+	"""
+        p = self._progressbox_process
+        # Close the pipe that we are using to feed dialog's stdin
+        try:
+            p["stdin"].close()
+        except IOError, v:
+            raise PythonDialogIOError(v)
+        exit_code = \
+                  self._wait_for_program_termination(p["pid"],
+                                                      p["child_rfd"])[0]
+        return exit_code
 
     def radiolist(self, text, height=15, width=54, list_height=7,
                   choices=[], **kwargs):

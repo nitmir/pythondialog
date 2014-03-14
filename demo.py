@@ -93,7 +93,15 @@ def gauge_demo(d):
         else:
             time.sleep(0.1)
     d.gauge_stop()
-    
+
+
+def progressbox_demo(d):
+    d.progressbox_start(title="Patience please...")
+    for i in range(20):
+        d.progressbox_output("Please wait....\n")
+        time.sleep(0.5)
+    d.progressbox_stop()
+
 
 def yesno_demo(d):
     # Return the answer given to the question (also specifies if ESC was
@@ -309,6 +317,7 @@ def demo():
 
     infobox_demo(d)
     gauge_demo(d)
+    progressbox_demo(d)
     answer = yesno_demo(d)
     msgbox_demo(d, answer)
     textbox_demo(d)

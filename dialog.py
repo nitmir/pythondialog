@@ -890,7 +890,12 @@ class Dialog:
         form_height -- height of the form
         fields      -- a list of tuples, each tuple has the form:
                       (label, item, len) or
-                      (label, item, field_len, input_len)
+                      (label, item, field_len, input_len) or
+                      (label, item, field_len, input_len, type)
+        with type doing the following :
+           - 0 normal text field
+           - 1 hidden, e.g., a password field.
+           - 2 readonly, e.g., a label
 
         it returns a tuple of the form (code, results), where results is a 
         list of the results.
@@ -905,11 +910,17 @@ class Dialog:
 
         # find the longest label so we can put the input boxes at the
         # correct offset
+        mixed = False
         max_label_len = 0
         for t in fields:
             if len(t[0]) > max_label_len:
                 max_label_len = len(t[0]);
-                    
+            if len(t) >= 5:
+                mixed = True
+
+        if mixed:
+            cmd[0]="--mixedform"
+
         line = 1
         for t in fields:
             label = t[0]
@@ -921,7 +932,15 @@ class Dialog:
                 input_len = field_len
             else:
                 input_len = str(t[3])
-            cmd.extend(((label, str(line), "1", item, str(line), str(max_label_len + 2), field_len, input_len)))
+            if mixed:
+                if len(t) < 5:
+                    input_type = '0'
+                else:
+                    input_type = str(t[4])
+            
+                cmd.extend(((label, str(line), "1", item, str(line), str(max_label_len + 2), field_len, input_len, input_type)))
+            else:
+                cmd.extend(((label, str(line), "1", item, str(line), str(max_label_len + 2), field_len, input_len)))
             line += 1
 
         (code, output) = self._perform(*(cmd,), **kwargs)

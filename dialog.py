@@ -81,8 +81,10 @@ if sys.hexversion < 0x02030000:
 # hierarchy, don't forget to update the module's docstring.
 class error(Exception):
     """Base class for exceptions in pythondialog."""
-    def __init__(self, message=None):
+    def __init__(self, message=None, *args):
         self.message = message
+        self.args = (message,) + args
+
     def __str__(self):
         return "<%s: %s>" % (self.__class__.__name__, self.message)
     def complete_message(self):
@@ -783,7 +785,7 @@ class Dialog:
         elif os.WIFSIGNALED(exit_info):
             raise DialogTerminatedBySignal("the dialog-like program was "
                                            "terminated by signal %u" %
-                                           os.WTERMSIG(exit_info))
+                                           os.WTERMSIG(exit_info), os.WTERMSIG(exit_info))
         else:
             raise PythonDialogBug("please report this bug to the "
                                   "pythondialog maintainers")
